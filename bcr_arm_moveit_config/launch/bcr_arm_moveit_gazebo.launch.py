@@ -6,6 +6,7 @@
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -23,7 +24,16 @@ def generate_launch_description():
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_camera",
+            default_value="true",
+            description="Enable RGBD camera and image bridge",
+        )
+    )
+
     use_sim_time = LaunchConfiguration("use_sim_time")
+    use_camera = LaunchConfiguration("use_camera")
 
     bcr_arm_gazebo_pkg = FindPackageShare("bcr_arm_gazebo")
     
@@ -31,7 +41,10 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([bcr_arm_gazebo_pkg, "launch", "bcr_arm.gazebo.launch.py"])
         ),
-        launch_arguments={"use_sim_time": use_sim_time}.items(),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "use_camera": use_camera,
+        }.items(),
     )
 
     moveit_config = (
@@ -96,11 +109,39 @@ def generate_launch_description():
         output="screen",
     )
 
+    image_bridge_node = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=[
+            "/camera/image_raw",
+            "/camera/depth/image_raw",
+            "/camera/camera_info",
+            "/camera/depth/camera_info",
+        ],
+        remappings=[
+            ("/camera/image_raw", "/camera/color/image_raw"),
+            ("/camera/camera_info", "/camera/color/camera_info"),
+        ],
+        output="screen",
+        condition=IfCondition(use_camera),
+    )
+
+    point_cloud_bridge_node = Node(
+        package="ros_gz_point_cloud",
+        executable="point_cloud_bridge",
+        arguments=["/camera/points"],
+        remappings=[("/camera/points", "/camera/depth/points")],
+        output="screen",
+        condition=IfCondition(use_camera),
+    )
+
     return LaunchDescription(
         declared_arguments + [
             gazebo_launch,
             move_group_node,
             rviz_node,
+            image_bridge_node,
+            point_cloud_bridge_node,
             # controller gets loaded by default by moveit_config
             # joint_state_broadcaster_spawner,
             # joint_trajectory_controller_spawner,
