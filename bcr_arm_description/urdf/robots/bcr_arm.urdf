@@ -418,7 +418,7 @@
   <link name="camera_depth_optical_frame"/>
   <!-- Ignition Gazebo Camera Plugin -->
   <gazebo reference="camera_link">
-    <sensor name="depth_camera" type="camera">
+    <sensor name="depth_camera" type="rgbd_camera">
       <always_on>true</always_on>
       <update_rate>20</update_rate>
       <visualize>true</visualize>
@@ -428,10 +428,12 @@
           <width>640</width>
           <height>480</height>
           <format>R8G8B8</format>
+          <topic>/camera/color/image_raw</topic>
         </image>
         <depth_image>
           <width>640</width>
           <height>480</height>
+          <topic>/camera/depth/image_raw</topic>
         </depth_image>
         <clip>
           <near>0.1</near>
