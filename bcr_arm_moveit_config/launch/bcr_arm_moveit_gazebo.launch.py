@@ -12,7 +12,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from moveit_configs_utils import MoveItConfigsBuilder
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 
 def generate_launch_description():
     declared_arguments = []
@@ -126,24 +126,29 @@ def generate_launch_description():
         condition=IfCondition(use_camera),
     )
 
-    point_cloud_bridge_node = Node(
-        package="ros_gz_point_cloud",
-        executable="point_cloud_bridge",
-        arguments=["/camera/points"],
-        remappings=[("/camera/points", "/camera/depth/points")],
-        output="screen",
-        condition=IfCondition(use_camera),
-    )
+    try:
+        get_package_share_directory("ros_gz_point_cloud")
+        point_cloud_bridge_node = Node(
+            package="ros_gz_point_cloud",
+            executable="point_cloud_bridge",
+            arguments=["/camera/points"],
+            remappings=[("/camera/points", "/camera/depth/points")],
+            output="screen",
+            condition=IfCondition(use_camera),
+        )
+    except PackageNotFoundError:
+        point_cloud_bridge_node = None
+
+    nodes = [
+        gazebo_launch,
+        move_group_node,
+        rviz_node,
+        image_bridge_node,
+    ]
+
+    if point_cloud_bridge_node is not None:
+        nodes.append(point_cloud_bridge_node)
 
     return LaunchDescription(
-        declared_arguments + [
-            gazebo_launch,
-            move_group_node,
-            rviz_node,
-            image_bridge_node,
-            point_cloud_bridge_node,
-            # controller gets loaded by default by moveit_config
-            # joint_state_broadcaster_spawner,
-            # joint_trajectory_controller_spawner,
-        ]
+        declared_arguments + nodes
     )
