@@ -114,9 +114,7 @@ def generate_launch_description():
         executable="image_bridge",
         arguments=[
             "/camera/image_raw",
-            "/camera/depth/image_raw",
             "/camera/camera_info",
-            "/camera/depth/camera_info",
         ],
         remappings=[
             ("/camera/image_raw", "/camera/color/image_raw"),
@@ -126,28 +124,12 @@ def generate_launch_description():
         condition=IfCondition(use_camera),
     )
 
-    try:
-        get_package_share_directory("ros_gz_point_cloud")
-        point_cloud_bridge_node = Node(
-            package="ros_gz_point_cloud",
-            executable="point_cloud_bridge",
-            arguments=["/camera/points"],
-            remappings=[("/camera/points", "/camera/depth/points")],
-            output="screen",
-            condition=IfCondition(use_camera),
-        )
-    except PackageNotFoundError:
-        point_cloud_bridge_node = None
-
     nodes = [
         gazebo_launch,
         move_group_node,
         rviz_node,
         image_bridge_node,
     ]
-
-    if point_cloud_bridge_node is not None:
-        nodes.append(point_cloud_bridge_node)
 
     return LaunchDescription(
         declared_arguments + nodes

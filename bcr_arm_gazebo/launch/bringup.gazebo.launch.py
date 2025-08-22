@@ -200,32 +200,18 @@ def generate_launch_description():
         condition=IfCondition(use_gazebo)
     )
 
-    # ROS-Gazebo Image Bridge for depth camera
+    # ROS-Gazebo Image Bridge for RGB camera
     start_gazebo_ros_image_bridge_cmd = Node(
         package='ros_gz_image',
         executable='image_bridge',
         arguments=[
             # Bridge the actual camera topics from Gazebo
             '/camera/image_raw',
-            '/camera/depth/image_raw',
             '/camera/camera_info',
-            '/camera/depth/camera_info',
         ],
         remappings=[
             ('/camera/image_raw', '/camera/color/image_raw'),
             ('/camera/camera_info', '/camera/color/camera_info'),
-        ],
-        output='screen',
-        condition=IfCondition(use_camera)
-    )
-
-    # ROS-Gazebo Point Cloud Bridge for depth camera
-    start_gazebo_ros_pointcloud_bridge_cmd = Node(
-        package='ros_gz_point_cloud',
-        executable='point_cloud_bridge',
-        arguments=['/camera/points'],
-        remappings=[
-            ('/camera/points', '/camera/depth/points'),
         ],
         output='screen',
         condition=IfCondition(use_camera)
