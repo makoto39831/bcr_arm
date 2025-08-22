@@ -88,8 +88,8 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            'use_camera', 
-            default_value='false', 
+            'use_camera',
+            default_value='true',
             choices=['true', 'false'],
             description='Whether to use camera in URDF (passed to XACRO)'
         )
