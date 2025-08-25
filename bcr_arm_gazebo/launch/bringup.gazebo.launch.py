@@ -206,14 +206,16 @@ def generate_launch_description():
         executable='image_bridge',
         arguments=[
             # Bridge the actual camera topics from Gazebo
-            '/camera/image_raw',
-            '/camera/depth/image_raw',
+            '/camera/image',
+            '/camera/depth_image',
             '/camera/camera_info',
-            '/camera/depth/camera_info',
+            '/camera/depth_image_info',
         ],
         remappings=[
-            ('/camera/image_raw', '/camera/color/image_raw'),
+            ('/camera/image', '/camera/color/image_raw'),
             ('/camera/camera_info', '/camera/color/camera_info'),
+            ('/camera/depth_image', '/camera/depth/image_raw'),
+            ('/camera/depth_image_info', '/camera/depth/camera_info'),
         ],
         output='screen',
         condition=IfCondition(use_camera)
